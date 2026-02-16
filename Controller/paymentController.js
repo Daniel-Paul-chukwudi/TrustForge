@@ -20,7 +20,7 @@ const sendEmail = require('../Middleware/Bmail')
 exports.initializeSubscriptionPaymentInvestor = async (req, res) => {
   try {
       const { id } = req.user;
-      const user = await investorModel.findByPk(id);
+      const user = await investorModel.findById(id);
       const code = await otpGen.generate(12, { upperCaseAlphabets: false, lowerCaseAlphabets: true, digits: true, specialChars: false })
       const ref = `TF-${code}-INS`
       const {price} = req.body
@@ -49,7 +49,7 @@ exports.initializeSubscriptionPaymentInvestor = async (req, res) => {
         name: `${user.fullName}`
       }
     }
-    console.log(paymentData);
+    // console.log(paymentData);
     
     
     const { data } = await axios.post('https://api.korapay.com/merchant/api/v1/charges/initialize', paymentData, {
@@ -94,7 +94,7 @@ exports.initializeSubscriptionPaymentInvestor = async (req, res) => {
 exports.initializeSubscriptionPaymentBusinessOwner = async (req, res) => {
   try {
       const { id } = req.user;
-      const user = await userModel.findByPk(id);
+      const user = await userModel.findById(id);
       const code = await otpGen.generate(12, { upperCaseAlphabets: false, lowerCaseAlphabets: true, digits: true, specialChars: false })
       const ref = `TF-${code}-BOS`
       const {price} = req.body
@@ -169,11 +169,11 @@ exports.initializeSubscriptionPaymentBusinessOwner = async (req, res) => {
 // exports.initializeInvestementPaymentInvestor = async (req, res) => {
 //   try {
 //       const { id } = req.user;
-//       const user = await investorModel.findByPk(id);
+//       const user = await investorModel.findById(id);
 //       const code = await otpGen.generate(12, { upperCaseAlphabets: false, lowerCaseAlphabets: true, digits: true, specialChars: false })
 //       const ref = `TF-${code}-ININ`
 //       const {price,businessId} = req.body
-//       const business = await businessModel.findByPk(businessId)
+//       const business = await businessModel.findById(businessId)
       
 
 //     // if (user === null) {
@@ -266,7 +266,7 @@ exports.initializeSubscriptionPaymentBusinessOwner = async (req, res) => {
 exports.initializeInvestementPaymentInvestor = async (req, res) => {
   try {
     const { id } = req.user;
-    const user = await investorModel.findByPk(id);
+    const user = await investorModel.findById(id);
     const code = otpGen.generate(12, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: true,
@@ -275,8 +275,8 @@ exports.initializeInvestementPaymentInvestor = async (req, res) => {
     });
     const ref = `TF-${code}-ININ`;
     const { price, businessId } = req.body;
-    const business = await businessModel.findByPk(businessId);
-    const meeting = await meetingModel.findOne({where:{businessName:business.businessName,host:id,meetingStatus:'Concluded'}})
+    const business = await businessModel.findById(businessId);
+    const meeting = await meetingModel.findOne({businessName:business.businessName,host:id,meetingStatus:'Concluded'})
     // console.log(meeting);
     
     // if(!meeting){
@@ -366,8 +366,8 @@ exports.verifyPayment = async (req, res) => {
     const { reference } = req.query;
     console.log(reference);
     
-    const payment = await paymentModel.findOne({where:{reference}})
-    console.log(payment);
+    const payment = await paymentModel.findOne({reference})
+    // console.log(payment);
     
     if (payment === null) {
       return res.status(404).json({
@@ -380,7 +380,7 @@ exports.verifyPayment = async (req, res) => {
       }
     })
 
-    console.log(data)
+    // console.log(data)
     if (data?.status === true && data?.data?.status === "success") {
       payment.status = 'Successful'
       await payment.save();
@@ -403,7 +403,7 @@ exports.verifyPayment = async (req, res) => {
 
 exports.getAll = async (req,res)=>{
     try {
-       const payments = await paymentModel.findAll()
+       const payments = await paymentModel.find()
        res.status(200).json({
         message:"all payments",
         data:payments
@@ -419,7 +419,7 @@ exports.getAll = async (req,res)=>{
 exports.webHook = async (req, res) => {
   try {
     const { event , data } = req.body;
-    const payment = await paymentModel.findOne({where:{ reference:data.reference }});
+    const payment = await paymentModel.findOne({ reference:data.reference });
     if (payment === null) {
       return res.status(404).json({
         message: 'Payment not found'
@@ -452,7 +452,7 @@ exports.webHook = async (req, res) => {
       console.log(payment);
         if (payment.paymentType === 'subscription'){
             if(payment.userType === 'investor'){
-              const targetI = await investorModel.findByPk(payment.userId)
+              const targetI = await investorModel.findById(payment.userId)
               if(payment.price === 10000){
                 targetI.subscribed = true
                 targetI.subscriptionTier = 'growth'
@@ -488,7 +488,7 @@ exports.webHook = async (req, res) => {
               }
               
             }else if(payment.userType === 'businessOwner'){
-              const targetB = await userModel.findByPk(payment.userId)
+              const targetB = await userModel.findById(payment.userId)
               // const business = await businessModel.findAll({where:{businessOwner:payment.userId}})
               if(payment.price === 10000){
                 targetB.subscribed = true
@@ -498,7 +498,7 @@ exports.webHook = async (req, res) => {
                 targetB.renew = false
                 targetB.subscriptionEnd = (Date.now() + 1000 * 60 * 60 * 24 * 30)
                 await targetB.save()
-                businessModel.update({subscriptionTier:'growth'},{where:{businessOwner:payment.userId}})
+                businessModel.updateMany({businessOwner:payment.userId},{subscriptionTier:'growth'})
               }else if(payment.price === 20000){
                 targetB.subscribed = true
                 targetB.subscriptionTier = 'premium'
@@ -506,7 +506,7 @@ exports.webHook = async (req, res) => {
                 // targetB.subscriptionEnd = (Date.now() + 1000 * 60 * 60 * 2)
                 targetB.subscriptionEnd = (Date.now() + 1000 * 60 * 60 * 24 * 30)
                 await targetB.save()
-                businessModel.update({subscriptionTier:'premium'},{where:{businessOwner:payment.userId}})
+                businessModel.updateMany({businessOwner:payment.userId},{subscriptionTier:'premium'})
               }
               await notificationModel.create({
               userId:payment.userId,
@@ -518,14 +518,14 @@ exports.webHook = async (req, res) => {
             }
         }else if(payment.paymentType === 'investment'){
           
-          const targetI = await investorModel.findByPk(payment.userId)
+          const targetI = await investorModel.findById(payment.userId)
           targetI.totalInvestment += payment.price
-          console.log(targetI);
+          // console.log(targetI);
           await targetI.save()
-          const Business = await businessModel.findByPk(payment.businessId)
+          const Business = await businessModel.findById(payment.businessId)
           Business.fundRaised += payment.price
           Business.save()
-          const targetB = await userModel.findByPk(Business.businessOwner)
+          const targetB = await userModel.findById(Business.businessOwner)
           await notificationModel.create({
           userId:payment.userId,
           businessId:payment.businessId,
@@ -541,9 +541,9 @@ exports.webHook = async (req, res) => {
           Thank you for putting your trust in TrustForge 👊😁`
             })
           
-          const targetBusiness = await agreementModel.findOne({where:{businessId:payment.businessId,investorId:targetI.id}})
+          const targetBusiness = await agreementModel.findOne({businessId:payment.businessId,investorId:targetI.id})
           if(targetBusiness){
-            await agreementModel.update({totalInvestment: targetBusiness.totalInvestment += payment.price,agrementStatus:"ongoing"},
+            await agreementModel.update({businessName:Business.businessName},{totalInvestment: targetBusiness.totalInvestment += payment.price,agrementStatus:"ongoing"},
             {where:{businessId:payment.businessId,investorId:targetI.id}})
           }else{
             await agreementModel.create({

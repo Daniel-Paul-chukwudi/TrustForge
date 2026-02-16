@@ -1,52 +1,45 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class payment extends Model {}
-
-payment.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const paymentSchema =new mongoose.Schema({
       userId: {
-        type: DataTypes.UUID,
-        allowNull:false
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
       },
       businessId:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
       },
       paymentType:{
-        type: DataTypes.ENUM('subscription','investment'),
+        type: String,
+        enum: ['subscription','investment'],
         
       },
       userType:{
-        type: DataTypes.ENUM('businessOwner','investor'),
+        type: String,
+        enum: ['businessOwner','investor'],
         
       },
       price: {
-        type: DataTypes.INTEGER,
+        type: Number,
       
       },
       reference: {
-        type: DataTypes.STRING
+        type: String,
         
       },
       status: {
-        type: DataTypes.ENUM('Pending', 'Successful', 'Failed'),
-        defaultValue: 'Pending'
+        type: String,
+        enum: ['Pending', 'Successful', 'Failed'],
+        default: 'Pending'
       }
 
 
 
   },
   {
-    sequelize, 
-    modelName: 'payments', 
     timestamps:true,
   }
 );
 
-module.exports = payment 
+const paymentModel = mongoose.model('payments', paymentSchema);
+
+module.exports = paymentModel; 

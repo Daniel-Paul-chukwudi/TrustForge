@@ -1,40 +1,34 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class supportticket extends Model {}
-
-supportticket.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const supportticketSchema =new mongoose.Schema({
       userId:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
       },
       businessId:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
       },
       title:{
-        type: DataTypes.STRING
+        type: String,
+        trim: true
       },
       description:{
-        type: DataTypes.STRING
+        type: String,
+        trim: true
       },
       ticketStatus:{
-        type: DataTypes.ENUM('open','under review','closed'),
-        defaultValue:'open'
+        type: String,
+        enum: ['open','under review','closed'],
+        default:'open'
       }
       
       
   },
   {
-    sequelize, 
-    modelName: 'supporttickets', 
     timestamps:true,
   }
 );
 
-module.exports = supportticket 
+const supportticketModel = mongoose.model('supporttickets', supportticketSchema);
+
+module.exports = supportticketModel; 

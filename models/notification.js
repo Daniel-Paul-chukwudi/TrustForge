@@ -1,38 +1,33 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class notification extends Model {}
-
-notification.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const notificationSchema =new mongoose.Schema({
       userId:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
+        
       },
       businessId:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'businesses'
       },
       title:{
-        type: DataTypes.STRING
+        type: String,
+        trim: true
       },
       description:{
-        type: DataTypes.STRING
+        type: String,
+        trim: true
       },
       status:{
-        type: DataTypes.ENUM('unread','read'),
-        defaultValue:'unread'
+        type: String,
+        enum: ['unread','read'],
+        default:'unread'
       } 
   },
   {
-    sequelize, 
-    modelName: 'notifications', 
     timestamps:true,
   }
 );
 
-module.exports = notification 
+const notificationModel = mongoose.model('notifications', notificationSchema);
+
+module.exports = notificationModel; 

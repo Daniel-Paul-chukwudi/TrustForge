@@ -21,15 +21,15 @@ exports.createMeetingInvestor = async (req, res) => {
       });
     }
     
-    const Business = await businessModel.findOne({where:{businessOwner:guest,id:businessId}})
+    const Business = await businessModel.findOne({businessOwner:guest,id:businessId})
     
-    const UserB = await userModel.findByPk(guest)
+    const UserB = await userModel.findById(guest)
     if (!UserB) {
       return res.status(404).json({ 
         message: 'BusinessOwner not found' 
       });
     }
-    const UserI = await investorModel.findByPk(id)
+    const UserI = await investorModel.findById(id)
     if (!UserI) {
       return res.status(404).json({ 
         message: 'Investor not found' 
@@ -84,15 +84,15 @@ exports.approveMeeting = async (req,res)=>{
   try {
     // const {id} = req.user
     const {meetingId}  = req.body
-    const target = await meetingModel.findOne({where:{id:meetingId}})
-    const Business = await businessModel.findOne({where:{businessOwner:target.guest}})
-
+    const target = await meetingModel.findOne({_id:meetingId})
+    
     if(!target){
       return res.status(404).json({
         message:"Oops it seems like the meeting does not exist "
       })
     }
-    await target.update({meetingStatus:"Approved and Upcoming"})
+    const Business = await businessModel.findOne({businessOwner:target.guest})
+    await meetingModel.findByIdAndUpdate(meetingId,{meetingStatus:"Approved and Upcoming"})
     notify({
       userId:target.host,
       businessId:Business.id,
@@ -121,9 +121,9 @@ exports.rescheduleMeeting = async(req,res)=>{
   try {
     const {id} = req.user
     const {meetingId, date, time,note}  = req.body
-    const target = await meetingModel.findOne({where:{id:meetingId}})
-    const user = await userModel.findByPk(id);
-    const investor = await investorModel.findByPk(id)
+    const target = await meetingModel.findOne({_id:meetingId})
+    const user = await userModel.findById(id);
+    const investor = await investorModel.findById(id)
     let rescheduleRole
     if(!target){
       return res.status(404).json({
@@ -136,7 +136,7 @@ exports.rescheduleMeeting = async(req,res)=>{
       rescheduleRole = user.role
     }
 
-    await target.update({date,time,meetingStatus:"Reschedule Requested",rescheduleRole,note})
+    await meetingModel.findByIdAndUpdate(meetingId,{date,time,meetingStatus:"Reschedule Requested",rescheduleRole,note})
     notify({
     userId:target.host,
     title:`Your meeting was rescheduled`,
@@ -165,14 +165,14 @@ exports.declineMeeting = async(req,res)=>{
   try {
     const {id} = req.user
     const {meetingId}  = req.body
-    const target = await meetingModel.findOne({where:{id:meetingId}})
+    const target = await meetingModel.findOne({id:meetingId})
 
     if(!target){
       return res.status(404).json({
         message:"Oops it seems like the meeting does not exist "
       })
     }
-    await meetingModel.update({meetingStatus:"Declined"},{where:{id:meetingId}})
+    await meetingModel.findByIdAndUpdate(meetingId,{meetingStatus:"Declined"})
     notify({
     userId:target.host,
     title:`Your meeting was declined`,
@@ -200,7 +200,7 @@ exports.declineMeeting = async(req,res)=>{
 
 exports.getAllMeetings = async (req, res) => {
   try {
-    const meetings = await meetingModel.findAll();
+    const meetings = await meetingModel.find();
     res.status(200).json({ 
       data: meetings 
     });
@@ -215,7 +215,7 @@ exports.getAllMeetings = async (req, res) => {
 exports.getMeetingById = async (req, res) => {
   try {
     const { id } = req.params;
-    const meeting = await meetingModel.findByPk(id);
+    const meeting = await meetingModel.findById(id);
 
     if (!meeting) {
       return res.status(404).json({ 
@@ -237,16 +237,16 @@ exports.getMeetingById = async (req, res) => {
 exports.getMeetingByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-    const investor = await investorModel.findByPk(userId)
-    const user = await userModel.findByPk(userId)
+    const investor = await investorModel.findById(userId)
+    const user = await userModel.findById(userId)
         if(!user && investor){
-            const meetings = await meetingModel.findAll({where:{host:userId}})
+            const meetings = await meetingModel.find({host:userId})
             return res.status(200).json({
                 message:"investor meetings",
                 meetings
             })
         }else if(!investor && user){
-            const meetings = await meetingModel.findAll({where:{guest:userId}})
+            const meetings = await meetingModel.find({guest:userId})
             return res.status(200).json({
                 message:"User meetings",
                 meetings
@@ -269,7 +269,7 @@ exports.updateMeeting = async (req, res) => {
     const { id } = req.params;
     const { meetingTitle, date, time, meetingType, note } = req.body;
 
-    const meeting = await meetingModel.findByPk(id);
+    const meeting = await meetingModel.findById(id);
     if (!meeting) {
       return res.status(404).json({ 
         message: 'Meeting not found' 
@@ -294,14 +294,14 @@ exports.deleteMeeting = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const meeting = await meetingModel.findByPk(id);
+    const meeting = await meetingModel.findById(id);
     if (!meeting) {
       return res.status(404).json({ 
         message: 'Meeting not found' 
       });
     }
 
-    await meeting.destroy();
+    await meetingModel.findByIdAndDelete(id);
 
     res.status(200).json({ 
       message: 'Meeting deleted successfully' 
@@ -318,14 +318,14 @@ exports.concludeMeeting = async(req,res)=>{
    try {
     const {id} = req.user
     const {meetingId}  = req.body
-    const target = await meetingModel.findOne({where:{id:meetingId}})
+    const target = await meetingModel.findOne({id:meetingId})
 
     if(!target){
       return res.status(404).json({
         message:"Oops it seems like the meeting does not exist "
       })
     }
-    await target.update({meetingStatus:"Concluded"})
+    await meetingModel.findByIdAndUpdate(meetingId,{meetingStatus:"Concluded"})
 
     res.status(200).json({
       message:"meeting concluded",

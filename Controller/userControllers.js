@@ -14,15 +14,11 @@ const paymentModel = require('../models/payment')
 const kycModel = require('../models/kyc-businessOwner')
 
 
-
-
-
-
 exports.signUp = async (req, res, next) => {
   try {
     const { fullName, phoneNumber, email,subscriptionTier, password,confirmPassword } = req.body
-    const user = await userModel.findOne({where:{ email: email.toLowerCase() }})
-    const investor = await investorModel.findOne({where:{email:email.toLowerCase()}})
+    const user = await userModel.findOne({email: email.toLowerCase() })
+    const investor = await investorModel.findOne({email:email.toLowerCase()})
     // console.log(user);
 
     if( !fullName|| !phoneNumber || !email || !password || !confirmPassword ){
@@ -31,17 +27,16 @@ exports.signUp = async (req, res, next) => {
       })
     }   
     
-    
-    if (user !== null) {
-      return res.status(403).json({
-        message: 'email already exists, Log in to your account',
-      })
-      return next(createError(404, "User not found"));
-    }else if(investor !==null){
-      return res.status(403).json({
-        message: 'email already exists, Log in to your account',
-      })
-    }
+    // if (user !== null) {
+    //   return res.status(403).json({
+    //     message: 'email already exists, Log in to your account',
+    //   })
+    //   return next(createError(404, "User not found"));
+    // }else if(investor !==null){
+    //   return res.status(403).json({
+    //     message: 'email already exists, Log in to your account',
+    //   })
+    // }
     if(password !== confirmPassword){   
       return res.status(403).json({
         message:"Passwords don,t match"
@@ -105,16 +100,16 @@ exports.verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
     
-    const user = await userModel.findOne({ where: { email: email.toLowerCase() } });
+    const user = await userModel.findOne({ email: email.toLowerCase() });
     
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }    
-    //  Check OTP
-    if (Date.now() > user.otpExpiredAt) {
-      return res.status(400).json({ message: 'OTP Expired' });
-    }
+
+    // if (Date.now() > user.otpExpiredAt) {
+    //   return res.status(400).json({ message: 'OTP Expired' });
+    // }
     
     
     if (user.otp !== otp) {
@@ -144,10 +139,9 @@ exports.verifyOtp = async (req, res, next) => {
 
 exports.loginUser = async (req, res, next) => {
       
-      try {
-        const { email, password } = req.body;
-    // Find user in SQL database
-    const user = await userModel.findOne({ where: { email: email.toLowerCase() } });
+  try {
+    const { email, password } = req.body;
+    const user = await userModel.findOne({  email: email.toLowerCase()  });
     if (user === null) {
       return res.status(404).json({ 
         message: 'Invalid login details' });
@@ -189,7 +183,7 @@ exports.userResendOtp = async (req, res, next) => {
   
   try {
     const { email } = req.body
-    const user = await userModel.findOne({where:{ email: email.toLowerCase() }})
+    const user = await userModel.findOne({ email: email.toLowerCase() })
     if (!user) {
       return res.status(404).json({
         message: 'User not found',
@@ -224,7 +218,7 @@ exports.changePassword = async (req, res, next) => {
   
   try {
     
-    const user = await userModel.findByPk(id);
+    const user = await userModel.findById(id);
     if (!user) {
       return res.status(404).json({
         message: "User not found",
@@ -265,8 +259,8 @@ exports.changePassword = async (req, res, next) => {
 exports.forgotPassword = async (req,res) => {
     try {
       const {email} = req.body
-      const user = await userModel.findOne({where:{email:email.toLowerCase()}});
-      const investor = await investorModel.findOne({where:{email:email.toLowerCase()}});
+      const user = await userModel.findOne({email:email.toLowerCase()});
+      const investor = await investorModel.findOne({email:email.toLowerCase()});
       if (!user && investor) {
         const token = jwt.sign({id:investor.id}, process.env.JWT_SECRET,{
           expiresIn:'10m',
@@ -325,8 +319,8 @@ exports.resetPassword = async (req,res) => {
       })
      }
 
-    const user = await userModel.findOne({where:{id:decoded.id}});
-    const investor = await investorModel.findOne({where:{id:decoded.id}});
+    const user = await userModel.findOne({id:decoded.id});
+    const investor = await investorModel.findOne({id:decoded.id});
     if (user && !investor) {
       const salt = await bcrypt.genSalt(10);
       const hash = await  bcrypt.hash(newPassword, salt);
@@ -359,7 +353,7 @@ exports.resetPassword = async (req,res) => {
 
 exports.getAll = async (req,res)=>{
     try {
-        const users = await userModel.findAll()
+        const users = await userModel.find()
 
         res.status(200).json({
             message:"All users in the database",
@@ -378,13 +372,13 @@ exports.getAll = async (req,res)=>{
 exports.getOne = async(req,res)=>{
   try {
         const id  = req.params.id
-        const user = await userModel.findByPk(id)
+        const user = await userModel.findById(id)
         // console.log(user);
         
-        // const savedBusinesses = await saveModel.findAll({where:{userId:id}})
+        // const savedBusinesses = await saveModel.findAll({userId:id})
         // console.log(savedBusinesses);
         
-        const businesses = await businessModel.findAll({where:{businessOwner:id}})
+        const businesses = await businessModel.findAll({businessOwner:id})
         let totalLikes = 0
         let totalViews = 0
         businesses.forEach((x)=>{
@@ -392,10 +386,10 @@ exports.getOne = async(req,res)=>{
           totalViews += x.viewCount
         })
     
-        const meetings = await meetingModel.findAll({where:{guest:id}})
-        const agreements = await agreementModel.findAll({where:{businessOwner:id}})
-        const notifications = await notificationModel.findAll({where:{userId:id}})
-        const kyc = await kycModel.findOne({where:{userId:id}})
+        const meetings = await meetingModel.findAll({guest:id})
+        const agreements = await agreementModel.findAll({businessOwner:id})
+        const notifications = await notificationModel.findAll({userId:id})
+        const kyc = await kycModel.findOne({userId:id})
         const response = {
           user,
           businesscount:businesses.length,
@@ -425,13 +419,13 @@ exports.getOne = async(req,res)=>{
 exports.deleteUser = async (req,res)=>{
   try {
     const {email} = req.body
-    const user = await userModel.findOne({where:{email:email.toLowerCase()}})
+    const user = await userModel.findOne({email:email.toLowerCase()})
     if(!user){
       return res.status(404).json({
         message:"the guy no dey DB"
       })
     }else{
-      await businessModel.destroy({where:{businessOwner:user.id}})
+      await businessModel.deleteMany({businessOwner:user._id})
       user.destroy()
       res.status(200).json({
       message:"i don commot am"
@@ -448,13 +442,13 @@ exports.fundingHistory = async (req,res)=>{
   try {
     const {id} = req.user
     const {businessId} = req.params
-    // const investments = await agreementModel.findAll({where:{businessOwner:id,businessId: businessId}})
-    const funds = await paymentModel.findAll({where:{businessId: businessId,paymentType:'investment',status:'Successful'}})
+    // const investments = await agreementModel.findAll({businessOwner:id,businessId: businessId})
+    const funds = await paymentModel.find({businessId: businessId,paymentType:'investment',status:'Successful'})
     let ans = []
     let response
     let investor
     for(const x of funds) {
-      investor = await investorModel.findByPk(x.userId)
+      investor = await investorModel.findById(x.userId)
       // console.log(investor);
       response = {
         investorName:investor?.fullName ?? 'Anonymous',

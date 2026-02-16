@@ -12,7 +12,32 @@ exports.createKycI = async (req, res) => {
     const govFile = req.files?.governmentId?.[0]
     const proofFile = req.files?.proofOfAddress?.[0]
     const proPic = req.files?.profilePic?.[0];
-    const existingKyc = await KycModel.findOne({ where: { userId:userId } });
+    const existingKyc = await KycModel.findOne({  userId:userId  });
+
+    if(!govFile && proofFile && proPic){
+          fs.unlinkSync(proofFile.path);
+          fs.unlinkSync(proPic.path);
+          return res.status(403).json({
+            message:"Please submit all documents for review"
+          })
+        }else if(govFile && !proofFile && proPic){
+          fs.unlinkSync(govFile.path);
+          fs.unlinkSync(proPic.path);
+          return res.status(403).json({
+            message:"Please submit all documents for review"
+          })
+        }else if(govFile && proofFile && !proPic){
+          fs.unlinkSync(govFile.path);
+          fs.unlinkSync(proofFile.path);
+          return res.status(403).json({
+            message:"Please submit all documents for review"
+          })
+        }else if(!govFile && !proofFile && !proPic){
+    
+          return res.status(403).json({
+            message:"Please submit all documents for review"
+          })
+        }
     
     if (existingKyc) {
       fs.unlinkSync(govFile.path);
@@ -23,7 +48,6 @@ exports.createKycI = async (req, res) => {
 
 
     const {
-      profilePic,
       fullName,
       dateOfBirth,
       phoneNumber,
@@ -33,8 +57,6 @@ exports.createKycI = async (req, res) => {
       city,
       state,
       investmentType,
-      governmentId,
-      proofOfAddress
     } = req.body;
     
     let file
@@ -58,10 +80,22 @@ exports.createKycI = async (req, res) => {
         resultPP = await cloudinary.uploader.upload(file.path, {resource_type: "auto"});
         fs.unlinkSync(proPic.path);
       }
+
+      const profilePic = {
+      imageUrl: resultPP.secure_url,
+      publicId: resultPP.public_id
+      }
+      const governmentId = {
+        imageUrl: resultG.secure_url,
+        publicId: resultG.public_id
+      }
+      const proofOfAddress = {
+        imageUrl: resultP.secure_url,
+        publicId: resultP.public_id
+      }
     
 
     const newKyc = new KycModel({
-      profilePic:resultPP.secure_url,
       userId,
       fullName,
       dateOfBirth,
@@ -72,11 +106,10 @@ exports.createKycI = async (req, res) => {
       city,
       state,
       investmentType,
-      governmentIdUrl: resultG.secure_url,
-      proofOfAddressUrl: resultP.secure_url,
-      governmentIdPublicId:resultG.public_id,
-      proofOfAddressPublicId:resultP.public_id,
-      profilePicPublicId:resultPP.public_id
+      profilePic,
+      governmentId,
+      proofOfAddress,
+      
     });
     await newKyc.save()
     notify({
@@ -85,7 +118,7 @@ exports.createKycI = async (req, res) => {
       description:`hello ${newKyc.fullName} your kyc has been submitted and is awaiting approval.
       Thank you for putting your trust in TrustForge 👊😁`
     })
-    await investorModel.update({kycStatus:'under review'},{where:{id:userId}})
+    await investorModel.findByIdAndUpdate(userId,{kycStatus:'under review'})
 
     res.status(201).json({
       message: 'KYC created successfully',
@@ -101,7 +134,7 @@ exports.createKycI = async (req, res) => {
 };
 exports.getAllKycs = async (req, res) => {
   try {
-    const kycs = await KycModel.findAll({where:{verificationStatus: "under review"}});
+    const kycs = await KycModel.find({verificationStatus: "under review"});
 
     res.status(200).json({
       message: 'All KYCs fetched successfully',
@@ -119,10 +152,10 @@ exports.getAllKycs = async (req, res) => {
 exports.getKycByUserId = async (req, res) => {
   try {
     const id = req.params.id;
-    const user = await userModel.findByPk(id)
-    const investor = await investorModel.findByPk(id)
+    const user = await userModel.findById(id)
+    const investor = await investorModel.findById(id)
     if(!investor && user){
-      const kyc = await KycModelU.findOne({where:{userId:id}});
+      const kyc = await KycModelU.findOne({userId:id});
       if (!kyc) {
       return res.status(404).json({ message: 'KYC not found' });
       }
@@ -131,7 +164,7 @@ exports.getKycByUserId = async (req, res) => {
       data: kyc
       });
     }else if(!user && investor){
-      const kyc = await KycModel.findOne({where:{userId:id}});
+      const kyc = await KycModel.findOne({userId:id});
       if (!kyc) {
       return res.status(404).json({ message: 'KYC not found' });
       }
@@ -156,7 +189,7 @@ exports.getKycByUserId = async (req, res) => {
 exports.updateKyc = async (req, res) => {
   try {
     const id = req.params.id;
-    const kyc = await KycModel.findByPk(id);
+    const kyc = await KycModel.findById(id);
     if (!kyc) return res.status(404).json({ message: 'KYC not found' });
 
     const updateData = { ...req.body };
