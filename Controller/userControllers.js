@@ -1,17 +1,17 @@
 require('dotenv').config()
 const userModel = require('../models/user')
-// const businessModel = require('../models/business')
-// const saveModel = require('../models/save')
-// const meetingModel = require('../models/meeting')
+const businessModel = require('../models/business')
+const saveModel = require('../models/save')
+const meetingModel = require('../models/meeting')
 const investorModel = require('../models/investor')
 const jwt = require('jsonwebtoken')
 const {verify,forgotPassword,verify2,forgotPassword2}= require('../Middleware/emailTemplates')
 const sendEmail = require('../Middleware/Bmail')
 const bcrypt = require('bcrypt')
-// const agreementModel = require('../models/agreement')
-// const notificationModel = require('../models/notification')
-// const paymentModel = require('../models/payment')
-// const kycModel = require('../models/kyc-businessOwner')
+const agreementModel = require('../models/agreement')
+const notificationModel = require('../models/notification')
+const paymentModel = require('../models/payment')
+const kycModel = require('../models/kyc-businessOwner')
 
 
 exports.signUp = async (req, res, next) => {
@@ -84,7 +84,7 @@ exports.signUp = async (req, res, next) => {
       subject:`Please verify your email ${newUser.fullName}`,
       html:verify2(newUser.fullName,newUser.otp)
     }
-    // sendEmail(verifyMail)
+    sendEmail(verifyMail)
 
     return res.status(201).json({
       message: 'User created successfully',
@@ -107,9 +107,9 @@ exports.verifyOtp = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }    
 
-    if (Date.now() > user.otpExpiredAt) {
-      return res.status(400).json({ message: 'OTP Expired' });
-    }
+    // if (Date.now() > user.otpExpiredAt) {
+    //   return res.status(400).json({ message: 'OTP Expired' });
+    // }
     
     
     if (user.otp !== otp) {
@@ -425,7 +425,7 @@ exports.deleteUser = async (req,res)=>{
         message:"the guy no dey DB"
       })
     }else{
-      await businessModel.destroy({businessOwner:user.id})
+      await businessModel.deleteMany({businessOwner:user._id})
       user.destroy()
       res.status(200).json({
       message:"i don commot am"

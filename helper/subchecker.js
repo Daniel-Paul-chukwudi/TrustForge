@@ -50,7 +50,6 @@ exports.subReminder = async ()=>{
         }
         
         
-        
         // await users.update({})
     } catch (error) {
         console.log(error.message);

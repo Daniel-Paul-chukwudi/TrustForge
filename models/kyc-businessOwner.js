@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const kycbusinessownerSchema =new mongoose.Schema({
     userId: {
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
     },
     fullName: {
         type: String,
