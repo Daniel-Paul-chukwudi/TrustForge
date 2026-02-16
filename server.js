@@ -1,27 +1,25 @@
 require('dotenv').config()
 const express = require('express')
 const PORT = process.env.PORT || 1234
+const DB = process.env.DB
 const cors = require('cors')
 const axios = require('axios')
-const sequelize = require('./Database/database')
 const userRouter = require('./route/userRouter')
-const businessRouter = require('./route/businessRouter')
-const paymentRouter = require('./route/paymentRouter')
-const investorRouter = require ('./route/investorRouter')
-const adminRouter = require ('./route/adminRouter')
-const meetingRouter = require("./route/meetingRouter")
-const notificationRouter = require("./route/notificationRouter")
-const kycRouter = require('./route/kycRoute')
+// const businessRouter = require('./route/businessRouter')
+// const paymentRouter = require('./route/paymentRouter')
+// const investorRouter = require ('./route/investorRouter')
+// const adminRouter = require ('./route/adminRouter')
+// const meetingRouter = require("./route/meetingRouter")
+// const notificationRouter = require("./route/notificationRouter")
+// const kycRouter = require('./route/kycRoute')
 const swaggerJSDoc = require('swagger-jsdoc')
 const swaggerUi  = require('swagger-ui-express')
 const {subEnder} = require('./helper/subchecker')
 const {createGoogleMeetLink}= require('./helper/meetingLinks')
+const mongoose = require("mongoose")
 
 // console.log(Date.now());
 subEnder()
-
-
-
 
 const app = express()
 app.use(express.json())
@@ -76,13 +74,13 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(userRouter);
-app.use(businessRouter);
-app.use(investorRouter);
-app.use(adminRouter);
-app.use(paymentRouter);
-app.use(meetingRouter)
-app.use(notificationRouter)
-app.use(kycRouter)
+// app.use(businessRouter);
+// app.use(investorRouter);
+// app.use(adminRouter);
+// app.use(paymentRouter);
+// app.use(meetingRouter)
+// app.use(notificationRouter)
+// app.use(kycRouter)
 app.use((error, req, res, next)=>{
   if (error) {
     res.send(error.message)
@@ -90,16 +88,14 @@ app.use((error, req, res, next)=>{
   next()
 })
 const Startserver = async ()=>{ 
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection established successfully');
-
+  mongoose.connect(DB).then(() => {
+    console.log('Connected to Database')
     app.listen(PORT, () => {
-      console.log(`Server running on PORT: ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Unable to connect to the database:', error.message);
-  }
+      console.log('Server is running on Port:', PORT)
+    })
+  }).catch((error) => {
+    console.log('Error connecting to Database', error.message)
+  });
 };
 
 Startserver();

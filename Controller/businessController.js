@@ -33,9 +33,9 @@ exports.createBusiness = async (req, res) => {
       businessRegistrationCertificate
       
     } = req.body;
-    const Bcheck = await business.findOne({where:{businessName:businessName}})
-    const businessCount = await business.findAll({where:{businessOwner: userId}})
-    const user = await userModel.findByPk(userId)
+    const Bcheck = await business.findOne({businessName:businessName})
+    const businessCount = await business.find({businessOwner: userId})
+    const user = await userModel.findById(userId)
 
     // if(user.kycStatus === 'not provided'){
     //   return res.status(401).json({
@@ -50,6 +50,25 @@ exports.createBusiness = async (req, res) => {
 
     const pitchD = req.files.pitchDeck
     const businessReg = req.files.businessRegistrationCertificate
+
+    if(!pitchD && businessReg){
+      fs.unlinkSync(businessReg[0].path)
+      return res.status(400).json({
+        message:"Please submit both documents for review"
+      })
+    }else if(pitchD && !businessReg){
+      fs.unlinkSync(pitchD[0].path)
+      return res.status(400).json({
+        message:"Please submit both documents for review"
+      })
+    }else if(!pitchD && !businessReg){
+      fs.unlinkSync(pitchD[0].path)
+      fs.unlinkSync(businessReg[0].path)
+      return res.status(400).json({
+        message:"Please submit both documents for review"
+      })
+    }
+
     if(user.subscriptionTier === 'free' && businessCount.length == 1 ){
       fs.unlinkSync(pitchD[0].path)
       fs.unlinkSync(businessReg[0].path)
@@ -143,18 +162,18 @@ exports.likeBusiness = async (req, res) => {
     const { businessId } = req.body;
     const { id } = req.user;
 
-    const business = await businessModel.findByPk(businessId);
-    const user = await investorModel.findByPk(id)
+    const business = await businessModel.findById(businessId);
+    const user = await investorModel.findById(id)
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    const likeCheck = await likeModel.findOne({ where: { userId: id, businessId } });
+    const likeCheck = await likeModel.findOne( { userId: id, businessId } )
 
     if (likeCheck) {
       business.likeCount -= 1;
       await business.save();
-      await likeModel.destroy({ where: { userId: id, businessId } });
+      await likeModel.findByIdAndDelete(likeCheck._id)
       return res.status(200).json({
         message: "Unliked successfully",
         businesslikes: business.likeCount
@@ -188,12 +207,12 @@ exports.viewBusiness = async (req, res) => {
     const { businessId } = req.body;
     const { id } = req.user;
 
-    const user = await investorModel.findByPk(id);
-    const business = await businessModel.findByPk(businessId);
+    const user = await investorModel.findById(id);
+    const business = await businessModel.findById(businessId);
 
     if (!business) return res.status(404).json({ message: "Business not found" });
 
-    const viewCheck = await viewModel.findOne({ where: { userId: id, businessId } });
+    const viewCheck = await viewModel.findOne( { userId: id, businessId } )
 
     if (user.subscribed === false) {
       return res.status(401).json({
@@ -235,15 +254,15 @@ exports.saveBusiness = async (req, res) => {
     const { businessId } = req.body;
     const { id } = req.user;
 
-    const business = await businessModel.findByPk(businessId);
+    const business = await businessModel.findById(businessId);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    const saveCheck = await saveModel.findOne({ where: { userId: id, businessId } });
+    const saveCheck = await saveModel.findOne( { userId: id, businessId } )
 
     if (saveCheck) {
-      await saveModel.destroy({ where: { userId: id, businessId } });
+      await saveModel.findByIdAndDelete( saveCheck._id)
       return res.status(200).json({
         message: "Unsaved successfully"
       });
@@ -271,13 +290,13 @@ exports.saveBusiness = async (req, res) => {
 
 exports.getBusiness = async (req, res) => {
   try {
-    const businesses = await businessModel.findAll({where:{businessStatus:'verified'}});
+    const businesses = await businessModel.find({businessStatus:'verified'});
     // let target
     // let premium = []
     // let growth = []
     // let free = []
     // for (const x of businesses){
-    //   target = await userModel.findByPk(x.businessOwner)
+    //   target = await userModel.findById(x.businessOwner)
     //   if (target.subscriptionTier !== 'premium' && target.subscriptionTier !== 'growth'){
     //     free.push(x)
     //   }else if(target.subscriptionTier !== 'premium' && target.subscriptionTier === 'growth'){
@@ -303,7 +322,7 @@ exports.getBusiness = async (req, res) => {
 exports.getOneById = async (req, res) => {
   try {
     const id = req.params.id;
-    const target = await businessModel.findByPk(id);
+    const target = await businessModel.findById(id);
     let remaining
     if (!target) {
       return res.status(404).json({ message: "Business not found" });
@@ -317,7 +336,7 @@ exports.getOneById = async (req, res) => {
     }
     
     
-    const interests = await agreementModel.findAll({where:{businessId:id}})
+    const interests = await agreementModel.find({businessId:id})
     if(diff <= 0 ){
       remaining = 0
       return res.status(200).json({
@@ -348,7 +367,7 @@ exports.getOneById = async (req, res) => {
 exports.getByIndustry = async (req, res) => {
   try {
     const { industry } = req.query;
-    const targets = await businessModel.findAll({ where: { industry: industry } });
+    const targets = await businessModel.find( { industry: industry } )
     res.status(200).json({
       message:`Businesses in the ${industry} industry`,
       data: targets
@@ -367,12 +386,12 @@ exports.updateB = async (req, res) => {
     const id = req.params.id;
     const updates = req.body;
 
-    const business = await businessModel.findByPk(id);
+    const business = await businessModel.findById(id);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    await business.update(updates);
+    await businessModel.findByIdAndUpdate(business._id,{updates});
     res.status(200).json({
       message: "Business updated successfully",
       data: business
@@ -388,13 +407,13 @@ exports.updateB = async (req, res) => {
 exports.deleteB = async(req,res)=>{
     try {
         const id = req.params.id
-        const target = await businessModel.findByPk(id)
+        const target = await businessModel.findById(id)
         if(!target){
           return res.status(404).json({
             message:"business not found"
           })
         }
-        await target.destroy()
+        await businessModel.findByIdAndDelete(target._id)
         res.status(200).json({
             message:"Business data deleted successfully",
         })

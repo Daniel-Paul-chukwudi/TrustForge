@@ -28,7 +28,7 @@ exports.markAllRead = async (req,res)=>{
         const {id} = req.user
         console.log(id);
         
-        await notificationModel.update({status:'read'},{where:{userId:id}})
+        await notificationModel.updateMany({userId:id},{status:'read'})
         res.status(200).json({
             message:"all notifications marked as read"
         })
@@ -42,7 +42,7 @@ exports.markAllRead = async (req,res)=>{
 
 exports.allNotifications = async (req,res)=>{
     try {
-        const notifications = await notificationModel.findAll()
+        const notifications = await notificationModel.find()
         res.status(200).json({
             message:"all the notifications in the db",
             notifications
@@ -58,7 +58,7 @@ exports.allNotifications = async (req,res)=>{
 exports.oneNotification = async(req,res)=>{
     try {
         const {notificationId} = req.body
-        const notification = await notificationModel.findByPk(notificationId)
+        const notification = await notificationModel.findById(notificationId)
         if (!notification){
             return res.status(404).json({
             message:"notification not found"
@@ -78,17 +78,24 @@ exports.oneNotification = async(req,res)=>{
 
 exports.readOneNotification = async(req,res)=>{
     try {
-        const {notificationId} = req.body
-        const notification = await notificationModel.findByPk(notificationId)
-        notification.update({status:'read'})
-        if (!notification){
-            return res.status(404).json({
-            message:"notification not found"
-        })
+        const { notificationId } = req.body;
+
+        const notification = await notificationModel.findByIdAndUpdate(
+        notificationId,
+        { status: "read" },
+        { new: true }
+        );
+
+        if (!notification) {
+        return res.status(404).json({
+            message: "Notification not found"
+        });
         }
+
         res.status(200).json({
-            message:"notification found"
-        })
+        message: "Notification marked as read",
+        notification
+        });
     } catch (error) {
         res.status(500).json({ 
             message: 'internal server error', 
@@ -100,8 +107,8 @@ exports.readOneNotification = async(req,res)=>{
 exports.allNotificationsById = async (req,res)=>{
     try {
         const {id} = req.user
-        const notificationsUnread = await notificationModel.findAll({where:{userId:id,status:'unread'}})
-        const notificationsRead = await notificationModel.findAll({where:{userId:id,status:'read'}})
+        const notificationsUnread = await notificationModel.find({userId:id,status:'unread'})
+        const notificationsRead = await notificationModel.find({userId:id,status:'read'})
         res.status(200).json({
             message:`all the notifications in the db for this user`,
             read:notificationsRead,
@@ -118,7 +125,7 @@ exports.allNotificationsById = async (req,res)=>{
 exports.deleteNotification = async (req,res)=>{
     try {
         const notificationId = req.params.id
-        const notifications = await notificationModel.destroy({where:{id:notificationId}})
+        const notifications = await notificationModel.findByIdAndDelete({id:notificationId})
         res.status(200).json({
             message:"notification deleted"
         })
@@ -133,7 +140,7 @@ exports.deleteNotification = async (req,res)=>{
 exports.deleteAllNotifications = async (req,res)=>{
     try {
         const id = req.user
-        const notifications = await notificationModel.destroy({where:{userId:id,status:'read'}})
+        const notifications = await notificationModel.deleteMany({userId:id,status:'read'})
         res.status(200).json({
             message:"notifications deleted"
         })

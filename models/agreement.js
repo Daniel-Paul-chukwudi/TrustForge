@@ -1,49 +1,43 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-
-class agreement extends Model {}
-
-agreement.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const agreementSchema =new mongoose.Schema({
       investorId: {
-        type: DataTypes.UUID,
-        allowNull:false
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'investors'
       },
       businessName:{
-        type: DataTypes.STRING
+        type: String,
+        required: true,
+        trim: true
       },
       businessOwner:{
-        type:DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
       },
       businessOwnerName:{
-        type:DataTypes.STRING
+        type: String,
+        required: true,
+        trim: true
       },
       businessId: {
-        type: DataTypes.UUID,
-        allowNull:false
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'businesses'
       },
       totalInvestment:{
-        type: DataTypes.INTEGER
+        type: Number
       },
       agrementStatus:{
-        type: DataTypes.ENUM('meetup','negociation','ongoing','finalized'),
-        allowNull: false,
-        defaultValue:"meetup"
+        type: String,
+        enum: ['meetup','negociation','ongoing','finalized'],
+        default:"meetup"
       },
 
   },
   {
-    sequelize, 
-    modelName: 'agreements', 
     timestamps:true,
   }
 );
 
-module.exports = agreement 
+const agreementModel = mongoose.model('agreements', agreementSchema);
+
+module.exports = agreementModel; 

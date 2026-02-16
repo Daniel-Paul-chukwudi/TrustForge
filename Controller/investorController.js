@@ -6,12 +6,12 @@ const bcrypt = require('bcrypt')
 const {verify,forgotPassword,verify2,forgotPassword2} = require('../Middleware/emailTemplates')
 const sendEmail = require('../Middleware/Bmail')
 const investorModel = require('../models/investor')
-const agreementModel = require('../models/agreement')
-const saveModel = require("../models/save")
-const businessModel = require('../models/business')
-const meetingModel = require('../models/meeting')
-const notificationModel = require('../models/notification')
-const kycModel = require('../models/kyc-investor')
+// const agreementModel = require('../models/agreement')
+// const saveModel = require("../models/save")
+// const businessModel = require('../models/business')
+// const meetingModel = require('../models/meeting')
+// const notificationModel = require('../models/notification')
+// const kycModel = require('../models/kyc-investor')
 
 
 
@@ -20,7 +20,7 @@ exports.makeDeal = async (req,res)=>{
         const investorId = req.user.id
         const businessId = req.params.id
 
-        const business = await businessModel.findOne({where:{id:businessId}})
+        const business = await businessModel.findOne({id:businessId})
         if(!business){
           return res.status(404).json({
             message:"business not found"
@@ -50,7 +50,7 @@ exports.makeDeal = async (req,res)=>{
 exports.investorResendOtp = async (req,res)=>{
   try {
     const { email } = req.body
-    const user = await investorModel.findOne({where:{ email: email.toLowerCase() }})
+    const user = await investorModel.findOne({ email: email.toLowerCase() })
     if (!user) {
       return res.status(404).json({
         message: 'Investor not found',
@@ -81,8 +81,8 @@ exports.investorResendOtp = async (req,res)=>{
 exports.signUp = async (req, res, next) => {
   try {
     const { fullName, phoneNumber,email,subscriptionTier, password,confirmPassword } = req.body
-    const user = await userModel.findOne({where:{ email: email.toLowerCase() }})
-    const investor = await investorModel.findOne({where:{email:email.toLowerCase()}})
+    const user = await userModel.findOne({ email: email.toLowerCase() })
+    const investor = await investorModel.findOne({email:email.toLowerCase()})
     
     
     if (user !== null) {
@@ -166,13 +166,13 @@ exports.signUp = async (req, res, next) => {
 exports.fundingHistory = async (req,res)=>{
   try {
     const {id} = req.user
-    const investments = await agreementModel.findAll({where:{investorId:id,agrementStatus:"ongoing"}})
+    const investments = await agreementModel.find({investorId:id,agrementStatus:"ongoing"})
     let response
     let ans = []
     let business
     let totInvestment = 0 
     for (const x of investments){
-      business = await businessModel.findByPk(x.businessId)
+      (x.businessId)
       response = {
         businessId:business.id,
         businessName:x.businessName,
@@ -206,7 +206,7 @@ exports.verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
     // Find user by email
-    const user = await investorModel.findOne({ where: { email: email.toLowerCase() } });
+    const user = await investorModel.findOne( { email: email.toLowerCase() } );
     
     
     if (!user) {
@@ -247,7 +247,7 @@ exports.logininvestor = async (req, res, next) => {
     try {
         const { email, password } = req.body;
     
-    const user = await investorModel.findOne({ where: { email: email.toLowerCase() } });
+    const user = await investorModel.findOne({ email: email.toLowerCase() } );
     if (user === null) {
       return res.status(404).json({ 
         message: 'Invalid login details' });
@@ -291,7 +291,7 @@ exports.logininvestor = async (req, res, next) => {
 exports.resendOtp = async (req, res, next) => {
   try {
     const { email } = req.body
-    const user = await userModel.findOne({where:{ email: email.toLowerCase() }})
+    const user = await userModel.findOne({ email: email.toLowerCase() })
     if (!user) {
       return res.status(404).json({
         message: 'User not found',
@@ -325,14 +325,14 @@ exports.changePassword = async (req, res, next) => {
     const { id } = req.user; 
     const { oldPassword, newPassword, confirmPassword } = req.body;
     
-    const user = await investorModel.findByPk(id);
+    // (id);
     if (!user) {
       return res.status(404).json({
         message: "Investor not found",
       });
     }
 
-        const checkOldPassword = await bcrypt.compare(oldPassword, user.password);
+    const checkOldPassword = await bcrypt.compare(oldPassword, user.password);
     if (!checkOldPassword) {
       return res.status(400).json({
         message: "Old password incorrect",
@@ -368,8 +368,8 @@ exports.changePassword = async (req, res, next) => {
 exports.forgotPassword = async (req,res) => {
     try {
       const {email} = req.body
-      const user = await userModel.findOne({where:{email:email.toLowerCase()}});
-      const investor = await investorModel.findOne({where:{email:email.toLowerCase()}});
+      const user = await userModel.findOne({email:email.toLowerCase()});
+      const investor = await investorModel.findOne({email:email.toLowerCase()});
       if (!user && investor) {
         const token = jwt.sign({id:investor.id}, process.env.JWT_SECRET,{
           expiresIn:'10m',
@@ -427,7 +427,7 @@ exports.resetPassword = async (req,res) => {
       })
      }
 
-    const user = await investorModel.findOne({where:{id:decoded.id}});
+    const user = await investorModel.findOne({id:decoded.id});
     if (!user) {
       return res.status(404).json({
           message:'investor not found'
@@ -452,7 +452,7 @@ exports.resetPassword = async (req,res) => {
 
 exports.getAll = async (req,res)=>{
     try {
-        const users = await investorModel.findAll()
+        const users = await investorModel.find()
 
         res.status(200).json({
             message:"All investor in the database",
@@ -471,11 +471,11 @@ exports.getAll = async (req,res)=>{
 exports.getOne = async(req,res)=>{
   try {
         const id  = req.params.id
-        const user = await investorModel.findByPk(id)
-        const savedBusinesses = await saveModel.findAll({where:{userId:id}})
-        const meetings = await meetingModel.findAll({where:{host:id}})
-        const notifications = await notificationModel.findAll({where:{userId:id}})
-        const kyc = await kycModel.findOne({where:{userId:id}})
+        (id)
+        const savedBusinesses = await saveModel.find({userId:id})
+        const meetings = await meetingModel.find({host:id})
+        const notifications = await notificationModel.find({userId:id})
+        const kyc = await kycModel.findOne({userId:id})
         
         const response = {
           user,
@@ -503,13 +503,13 @@ exports.getOne = async(req,res)=>{
 exports.deleteUser = async (req,res)=>{
   try {
     const {email} = req.body
-    const user = await investorModel.findOne({where:{email:email.toLowerCase()}})
+    const user = await investorModel.findOne({email:email.toLowerCase()})
     if(!user){
       return res.status(404).json({
         message:"the guy no dey DB"
       })
     }else{
-      
+      const user = await investorModel.findByIdAndDelete({id:user._id})
       user.destroy()
       res.status(200).json({
       message:"i don commot am"
@@ -522,25 +522,25 @@ exports.deleteUser = async (req,res)=>{
   }
 }
 
-exports.subscriptionBypass = async (req,res)=>{
-  try {
-    const {id} = req.body
-    const user = await investorModel.findByPk(id)
+// exports.subscriptionBypass = async (req,res)=>{
+//   try {
+//     const {id} = req.body
+//     (id)
 
-    user.subscribed = true 
-    user.viewAllocation = 1
-    await user.save()
-    res.status(200).json({
-      message:"stuff",
-      data:user
-    })
+//     user.subscribed = true 
+//     user.viewAllocation = 1
+//     await user.save()
+//     res.status(200).json({
+//       message:"stuff",
+//       data:user
+//     })
 
-  } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message
-    })
-  }
-}
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message
+//     })
+//   }
+// }
 
 

@@ -33,7 +33,7 @@ exports.createTicket = async (req, res) => {
 
 exports.getAllTickets = async (req, res) => {
   try {
-    const tickets = await supportTicketModel.findAll();
+    const tickets = await supportTicketModel.find();
     res.status(200).json({ data: tickets });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching tickets', error: error.message });
@@ -44,7 +44,7 @@ exports.getAllTickets = async (req, res) => {
 exports.getTicketById = async (req, res) => {
   try {
     const { id } = req.params;
-    const ticket = await supportTicketModel.findByPk(id);
+    const ticket = await supportTicketModel.findById(id);
 
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not Available' });
@@ -62,12 +62,10 @@ exports.updateTicket = async (req, res) => {
     const { id } = req.params;
     const { title, description, ticketStatus } = req.body;
 
-    const ticket = await supportTicketModel.findByPk(id);
+    const ticket = await supportTicketModel.findByIdAndUpdate(id,{ title, description, ticketStatus });
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not Available' });
     }
-
-    await ticket.update({ title, description, ticketStatus });
     res.status(200).json({
       message: 'Ticket updated successfully',
       data: ticket
@@ -81,7 +79,7 @@ exports.updateTicket = async (req, res) => {
 exports.deleteTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const ticket = await supportTicketModel.findByPk(id);
+    const ticket = await supportTicketModel.findByIdAndDelete(id);
 
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not Available' });

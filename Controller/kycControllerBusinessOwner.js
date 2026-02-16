@@ -8,11 +8,36 @@ exports.createKyc = async (req, res) => {
   try {
     
     const userId = req.user.id;
-    const existingKyc = await KycModel.findOne({ where: { userId:userId } });
+    const existingKyc = await KycModel.findOne({ userId:userId } );
     
     const govFile = req.files?.governmentId?.[0]
     const proofFile = req.files?.proofOfAddress?.[0]
     const proPic = req.files?.profilePic?.[0];
+
+    if(!govFile && proofFile && proPic){
+      fs.unlinkSync(proofFile.path);
+      fs.unlinkSync(proPic.path);
+      return res.status(403).json({
+        message:"Please submit all documents for review"
+      })
+    }else if(govFile && !proofFile && proPic){
+      fs.unlinkSync(govFile.path);
+      fs.unlinkSync(proPic.path);
+      return res.status(403).json({
+        message:"Please submit all documents for review"
+      })
+    }else if(govFile && proofFile && !proPic){
+      fs.unlinkSync(govFile.path);
+      fs.unlinkSync(proofFile.path);
+      return res.status(403).json({
+        message:"Please submit all documents for review"
+      })
+    }else if(!govFile && !proofFile && !proPic){
+
+      return res.status(403).json({
+        message:"Please submit all documents for review"
+      })
+    }
 
     if (existingKyc) {
       fs.unlinkSync(govFile.path);
@@ -22,7 +47,6 @@ exports.createKyc = async (req, res) => {
     }
 
     const {
-      profilePic,
       fullName,
       dateOfBirth,
       phoneNumber,
@@ -58,10 +82,22 @@ exports.createKyc = async (req, res) => {
       resultPP = await cloudinary.uploader.upload(file.path, {resource_type: "auto"});
       fs.unlinkSync(proPic.path);
     }
+
+    const profilePic = {
+      imageUrl: resultPP.secure_url,
+      publicId: resultPP.public_id
+    }
+    const governmentId = {
+      imageUrl: resultG.secure_url,
+      publicId: resultG.public_id
+    }
+    const proofOfAddress = {
+      imageUrl: resultP.secure_url,
+      publicId: resultP.public_id
+    }
     
 
     const newKyc = new KycModel({
-      profilePic:resultPP.secure_url,
       userId,
       fullName,
       dateOfBirth,
@@ -75,14 +111,13 @@ exports.createKyc = async (req, res) => {
       accountNumber,
       accountType,
       bankName,
-      governmentIdUrl: resultG.secure_url,
-      proofOfAddressUrl: resultP.secure_url,
-      governmentIdPublicId:resultG.public_id,
-      proofOfAddressPublicId:resultP.public_id,
-      profilePicPublicId:resultPP.public_id
+      profilePic,
+      governmentId,
+      proofOfAddress
+      
     });
     await newKyc.save()
-    await UserModel.update({kycStatus:'under review'},{where:{id:userId}})
+    await UserModel.findByIdAndUpdate(userId,{kycStatus:'under review'})
     notify({
       userId:userId,
       title:`Your kyc has been submitted successfully`,

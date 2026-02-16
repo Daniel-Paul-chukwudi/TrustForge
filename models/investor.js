@@ -1,88 +1,83 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class investor extends Model {}
-
-investor.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const investorSchema =new mongoose.Schema({
       fullName: {
-        type: DataTypes.STRING,
-        allowNull:false
+        type: String,
+        required: true,
+        trim: true
       },
       email: {
-        type: DataTypes.STRING,
-        allowNull:false,
-        unique:true,
+        type: String,
+        required: true,
+        trim: true
       },
       phoneNumber:{
-        type:DataTypes.STRING,
-        allowNull:false
+        type: String,
+        required: true,
       },
       password: {
-        type: DataTypes.STRING,
-        allowNull:false
+        type: String,
+        required: true
       },
       isVerified:{
-        type: DataTypes.BOOLEAN,
-        defaultValue:false
+        type: Boolean,
+        required: true,
+        default: false
       },
       isGoogle:{
-        type: DataTypes.BOOLEAN,
-        defaultValue:false
-      },
-      subscribed:{
-        type: DataTypes.BOOLEAN,
-        allowNull:false,
-        defaultValue:false
+        type: Boolean,
+        required: true,
+        default: false
       },
       role:{
-        type: DataTypes.STRING,
-        defaultValue: "Investor"
+        type: String,
+        required: true,
+        default:"Investor"
       },
       viewAllocation:{
-        type: DataTypes.INTEGER,
-        defaultValue:0
+        type: Number,
+        default: 0
       },
       totalInvestment:{
-        type: DataTypes.BIGINT,
-        defaultValue:0
+        type: Number,
+        default: 0
+      },
+      subscribed:{
+        type: Boolean,
+        default: false
       },
       subscriptionTier:{
-        type: DataTypes.ENUM('free','growth','premium'),
-        defaultValue:'free'
+        type: String,
+        enum: ['free','growth','premium'],
+        default:'free'
       },
       renew:{
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
+        type: Boolean,
+        default: false
       },
       subscriptionStart:{
-        type: DataTypes.BIGINT,
+        type: Number,
       },
       subscriptionEnd:{
-        type: DataTypes.BIGINT
+        type: Number
       },
       otp:{
-        type: DataTypes.STRING
+        type: String,
       },
       otpExpiredAt:{
-        type: DataTypes.BIGINT
+        type: Number
       },
       kycStatus:{
-        type: DataTypes.ENUM('not provided','under review','verified'),
-        defaultValue:'not provided'
+        type: String,
+        enum: ['not provided','under review','verified'],
+        default:'not provided'
       }
   },
   {
-    sequelize, 
-    modelName: 'investors', 
     timestamps:true,
   }
 );
 
-module.exports = investor 
+const investorModel = mongoose.model('investors', investorSchema);
+
+module.exports = investorModel; 

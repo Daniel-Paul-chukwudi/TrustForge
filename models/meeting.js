@@ -1,67 +1,60 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class meeting extends Model {}
-
-meeting.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const meetingSchema =new mongoose.Schema({
       host:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'investors'
       },
       guest:{
-        type: DataTypes.UUID
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
       },
       meetingLink:{
-        type: DataTypes.STRING
+        type: String
       },
       hostName:{
-        type: DataTypes.STRING
+        type: String
       },
       businessOwnerName:{
-        type: DataTypes.STRING
+        type: String
       },
       businessName:{
-        type: DataTypes.STRING
+        type: String
       },
       rescheduleRole:{
-        type: DataTypes.STRING
+        type: String
       },
       meetingTitle: {
-        type: DataTypes.STRING,
-        allowNull:false,
+        type: String,
+        required: true,
       },
       date:{
-        type:DataTypes.STRING,
-        allowNull:false
+        type: String,
+        required: true
       },
       time: {
-        type: DataTypes.STRING,
-        allowNull:false
+        type: String,
+        required: true
       },
       meetingType:{
-        type: DataTypes.STRING,
+        type: String,
       },
       note:{
-        type: DataTypes.STRING,
+        type: String,
       },
       meetingStatus:{
-        type: DataTypes.ENUM('Awaiting Approval','Approved and Upcoming','Reschedule Requested','Declined','Concluded'),
-        defaultValue: 'Awaiting Approval'
+        type: String,
+        enum: ['Awaiting Approval','Approved and Upcoming','Reschedule Requested','Declined','Concluded'],
+        default: 'Awaiting Approval'
       }
       
       
   },
-  {
-    sequelize, 
-    modelName: 'meetings', 
+  { 
     timestamps:true,
   }
 );
 
-module.exports = meeting 
+const meetingModel = mongoose.model('meetings', meetingSchema);
+
+module.exports = meetingModel; 

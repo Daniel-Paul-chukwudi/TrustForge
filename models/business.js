@@ -1,109 +1,121 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class Business extends Model {}
-
-Business.init(
-  {
-    id: {
-      allowNull:false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4
-    },
+const businessSchema =new mongoose.Schema({
     businessName: {
-      type: DataTypes.STRING,
-      
+      type: String,
+      required: true,
+      trim: true
     },
     industry: {
-      type: DataTypes.STRING,
+      type: String,
+      required: true,
+      trim: true
       
     },
     description: {
-      type: DataTypes.STRING,
+      type: String,
+      required: true,
+      trim: true
       
     },
     yearFounded: {
-      type: DataTypes.INTEGER,
+      type: Number
       
     },
     businessModel: {
-      type: DataTypes.STRING,
+      type: String,
+      required: true,
+      trim: true
       
     },
     revenueModel: {
-      type: DataTypes.STRING,
+      type: String,
+      required: true,
+      trim: true
       
     },
     targetMarket: {
-      type: DataTypes.STRING,
+      type: String,
+      required: true,
+      trim: true
       
     },
     fundingStage: {
-      type: DataTypes.STRING,
+      type: String,
+      required: true,
+      trim: true
       
     },
     fundingSought: {
-      type: DataTypes.INTEGER,
+      type: Number
       
     },
     currentRevenue: {
-      type: DataTypes.INTEGER,
+      type: Number
       
     },
-    pitchDeck: {
-      type: DataTypes.STRING, 
-      
+    pitchdeck: {
+      imageUrl: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
-    businessRegisterationCertificate:{
-      type: DataTypes.STRING
-    },
-    pitchDeckPublicId:{
-      type: DataTypes.STRING
-    },
-    businessRegisterationCertificatePublicId:{
-      type: DataTypes.STRING
+    businessRegisterationCertificate: {
+      imageUrl: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
     fundRaised: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
+      type: Number,
+      default: 0
     },
     likeCount: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
+      type: Number,
+      default: 0
     },
     viewCount: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0
+      type: Number,
+      default: 0
     },
     businessOwner: {
-      type: DataTypes.UUID,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'users'
     },
     businessOwnerName:{
-      type: DataTypes.STRING
+      type: String,
+      required: true,
+      trim: true
     },
     businessStatus:{
-      type: DataTypes.ENUM('under review','verified'),
-      defaultValue:'under review'
+      type: String,
+      enum: ['under review','verified'],
+      default:'under review'
     },
     businessViewCount:{
-      type: DataTypes.INTEGER,
-      defaultValue:0
+      type: Number,
+      default:0
     },
     businessViewStatus:{
-      type: DataTypes.ENUM('active','disabled')
+      type: String,
+      enum: ['active','disabled'],
+      default:'active'
     },
     subscriptionTier:{
-      type: DataTypes.ENUM('free','growth','premium'),
-      defaultValue:'free'
+      type: String,
+      enum: ['free','growth','premium'],
+      default:'free'
     }
   },
   {
-    sequelize,
-    modelName: 'Business',
-    tableName: 'businesses',
     timestamps: true
   }
 );
 
-module.exports = Business;
+const businessModel = mongoose.model('businesses', businessSchema);
+
+module.exports = businessModel; 

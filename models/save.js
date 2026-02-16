@@ -1,30 +1,18 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class save extends Model {}
-
-save.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const saveSchema =new mongoose.Schema({
       userId: {
-        type: DataTypes.UUID,
-        allowNull:false
+        type: mongoose.Schema.Types.ObjectId,
       },
       businessId:{
-        type: DataTypes.UUID,
-        allowNull:false,
+        type: mongoose.Schema.Types.ObjectId,
       },
   },
   {
-    sequelize, 
-    modelName: 'saves', 
     timestamps:true,
   }
 );
 
-module.exports = save 
+const saveModel = mongoose.model('saves', saveSchema);
+
+module.exports = saveModel; 

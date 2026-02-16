@@ -1,32 +1,22 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class like extends Model {}
-
-like.init(
-  {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
+const likeSchema =new mongoose.Schema({
       userId: {
-        type: DataTypes.UUID,
-        allowNull:false
-      },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'investors'          
+    },
       businessId:{
-        type: DataTypes.UUID,
-        allowNull:false,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'businesses'
       },
 
 
   },
-  {
-    sequelize, 
-    modelName: 'likes', 
+  { 
     timestamps:true,
   }
 );
 
-module.exports = like
+const likeModel = mongoose.model('likes', likeSchema);
+
+module.exports = likeModel; 

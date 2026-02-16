@@ -1,87 +1,87 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../Database/database');
+const mongoose = require('mongoose');
 
-class kycinvestor extends Model {}
-
-kycinvestor.init(
-  {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4
-    },
-    profilePic:{
-      type: DataTypes.STRING
-    },
+const kycinvestorSchema =new mongoose.Schema({
     userId: {
-      type: DataTypes.UUID
+        type: DataTypes.UUID
     },
     fullName: {
-      type: DataTypes.STRING,
-      allowNull: false
+        type: String,
+        required: true,
+      trim: true
     },
     dateOfBirth: {
-      type: DataTypes.STRING,
-      allowNull: false
+        type: String,
+        required: true
     },
     phoneNumber: {
-      type: DataTypes.STRING,
-      allowNull: false
+        type: String,
+        required: true
     },
     email: {
-      type: DataTypes.STRING,
-      allowNull: false,
+        type: String,
+        required: true,
+        trim: true
     },
     nationality: {
-      type: DataTypes.STRING,
-      allowNull: false
+      type: String,
+      required: true,
+      trim: true
     },
     residentialAddress: {
-      type: DataTypes.STRING,
-      allowNull: false
+        type: String,
+        required: true,
+        trim : true
     },
     city: {
-      type: DataTypes.STRING,
-      allowNull: false
+        type: String,
+        required: true,
+        trim: true
     },
     state: {
-      type: DataTypes.STRING,
-      allowNull: false
+        type: String,
+        required: true,
+        trim: true
     },
-    investmentType: {
-      type: DataTypes.STRING,
-      allowNull: false
+    bankName: {
+        type: String,
+        required: true,
+        trim: true
     },
-    governmentIdUrl: {
-      type: DataTypes.STRING,
-      allowNull: false
+    profilePic: {
+      imageUrl: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
-    proofOfAddressUrl: {
-      type: DataTypes.STRING,
-      allowNull: false
+    governmentId: {
+      imageUrl: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
-    governmentIdPublicId: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    proofOfAddressPublicId: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    profilePicPublicId:{
-      type: DataTypes.STRING
+    proofOfAddress: {
+      imageUrl: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
     },
     verificationStatus: {
-      type: DataTypes.ENUM('pending', 'approved', 'rejected'),
-      defaultValue: 'pending'
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
     }
   },
   {
-    sequelize,
-    modelName: 'kycinvestor',
     timestamps: true
   }
 );
 
-module.exports = kycinvestor;
+const kycinvestorModel = mongoose.model('kycinvestors', kycinvestorSchema);
+
+module.exports = kycinvestorModel; 

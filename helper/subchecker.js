@@ -5,7 +5,7 @@ const notify = require('../helper/notificationTemplate')
 exports.subEnder = async ()=>{
     try {
         const check = Date.now()
-        const users = await userModel.findAll()
+        const users = await userModel.find()
         let clear = []
         for (const x of users){
             if(x.subscriptionEnd < check && x.subscriptionEnd !== null && x.subscriptionTier !== 'free'){
@@ -13,16 +13,8 @@ exports.subEnder = async ()=>{
             }
         }
         if(clear.length > 0){
-        await userModel.update({subscriptionTier:'free',subscriptionEnd:0,subscriptionStart:0, renew:true},
-            {where: {
-                id: clear.map((i)=> i.id)
-            }}
-        )
-        await businessModel.update({subscriptionTier:'free'},
-            {where: {
-                businessOwner: clear.map((i)=> i.id)
-            }}
-        )
+        await userModel.UpdateMany({id: clear.map((i)=> i.id)},{subscriptionTier:'free',subscriptionEnd:0,subscriptionStart:0, renew:true},)
+        await businessModel.updateMany({businessOwner: clear.map((i)=> i.id)},{subscriptionTier:'free'})
         for(const y of clear){
             notify({
                 userId:y.id,
@@ -42,7 +34,7 @@ exports.subEnder = async ()=>{
 exports.subReminder = async ()=>{
     try {
         const check = Date.now()
-        const users = await userModel.findAll()
+        const users = await userModel.find()
         let clear = []
         for (const x of users){
             if((x.subscriptionEnd - (1000*60*60*24)) < check && x.subscriptionEnd !== null && x.subscriptionTier !== 'free'){
